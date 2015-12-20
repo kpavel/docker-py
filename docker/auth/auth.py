@@ -149,12 +149,19 @@ def load_config(config_path=None):
     if os.path.exists(config_file):
         try:
             with open(config_file) as f:
+                res = {}
                 for section, data in six.iteritems(json.load(f)):
-                    if section != 'auths':
-                        continue
-                    log.debug("Found 'auths' section")
-                    return parse_auth(data)
-            log.debug("Couldn't find 'auths' section")
+                    if section == 'auths':
+                        log.debug("Found 'auths' section")
+                        res.update(parse_auth(data))
+                    elif section == 'HttpHeaders':
+                        log.debug("Found 'HttpHeaders' section!: " + str(section) + ':' + str(data))
+                        res.update({section: data})
+                if res:
+                    log.debug('Returning res: ' + str(res))
+                    return res
+                else:
+                    log.debug("Couldn't find 'auths' or 'HttpHeaders' sections")
         except (IOError, KeyError, ValueError) as e:
             # Likely missing new Docker config file or it's in an
             # unknown format, continue to attempt to read old location

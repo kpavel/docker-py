@@ -20,7 +20,7 @@ import requests
 import requests.exceptions
 import six
 import websocket
-
+import logging
 
 from . import api
 from . import constants
@@ -31,6 +31,7 @@ from .ssladapter import ssladapter
 from .utils import utils, check_resource
 from .tls import TLSConfig
 
+log = logging.getLogger(__name__)
 
 class Client(
         requests.Session,
@@ -84,6 +85,19 @@ class Client(
                 )
             )
 
+    def update_headers(func):
+        def inner(self, *args, **kwargs):
+            if 'HttpHeaders' in self._auth_configs:
+                if 'headers' not in kwargs:
+                    headers = self._auth_configs['HttpHeaders']
+                    kwargs['headers'] = self._auth_configs['HttpHeaders']
+                else:
+                    kwargs['headers'].update(self._auth_configs['HttpHeaders'])
+
+            return func(self, *args, **kwargs)
+
+        return inner
+
     def _retrieve_server_version(self):
         try:
             return self.version(api_version=False)["ApiVersion"]
@@ -103,15 +117,19 @@ class Client(
         kwargs.setdefault('timeout', self.timeout)
         return kwargs
 
+    @update_headers
     def _post(self, url, **kwargs):
         return self.post(url, **self._set_request_timeout(kwargs))
 
+    @update_headers
     def _get(self, url, **kwargs):
         return self.get(url, **self._set_request_timeout(kwargs))
 
+    @update_headers
     def _put(self, url, **kwargs):
         return self.put(url, **self._set_request_timeout(kwargs))
 
+    @update_headers
     def _delete(self, url, **kwargs):
         return self.delete(url, **self._set_request_timeout(kwargs))
 
