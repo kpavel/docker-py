@@ -20,7 +20,6 @@ import requests
 import requests.exceptions
 import six
 import websocket
-import logging
 
 from . import api
 from . import constants
@@ -31,7 +30,6 @@ from .ssladapter import ssladapter
 from .utils import utils, check_resource
 from .tls import TLSConfig
 
-log = logging.getLogger(__name__)
 
 class Client(
         requests.Session,
